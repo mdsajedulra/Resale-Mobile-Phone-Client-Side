@@ -67,6 +67,17 @@ async function run() {
     } catch (error) {
         res.send(error)
     }
+    // All all user
+    try {
+        app.get('/users', async (req, res) => {
+            const email = req.query.email;
+            console.log(email)
+            const users = await usersCollection.findOne({ email: email });
+            res.send(users)
+        })
+    } catch (error) {
+        res.send(error)
+    }
 
 
     // All seller
