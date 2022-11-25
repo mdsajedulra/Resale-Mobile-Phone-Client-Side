@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
+const { query } = require('express');
 
 const app = express()
 //middle ware
@@ -55,6 +56,32 @@ async function run() {
     } catch (error) {
         res.send(error)
     }
+
+
+    // All buyers
+    try {
+        app.get('/allbuyer', async (req, res) => {
+            const buyer = await usersCollection.find({ "role": "buyer" }).toArray();
+            res.send(buyer)
+        })
+    } catch (error) {
+        res.send(error)
+    }
+
+
+    // All seller
+    try {
+        app.get('/allseller', async (req, res) => {
+            const seller = await usersCollection.find({ "role": "seller" }).toArray();
+            res.send(seller)
+        })
+    } catch (error) {
+        res.send(error)
+    }
+
+
+
+
     // delete order by user
     try {
         app.delete('/myorder/delete/:id', async (req, res) => {
@@ -62,6 +89,16 @@ async function run() {
             // console.log(query)
             const orders = await bookingCollection.deleteOne({ _id: ObjectId(id) })
             res.send(orders)
+        })
+    } catch (error) {
+        res.send(error)
+    }
+    try {
+        app.delete('/user/delete/:id', async (req, res) => {
+            const id = req.params.id;
+            // console.log(query)
+            const users = await usersCollection.deleteOne({ _id: ObjectId(id) })
+            res.send(users)
         })
     } catch (error) {
         res.send(error)
