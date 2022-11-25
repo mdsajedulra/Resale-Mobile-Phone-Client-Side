@@ -15,6 +15,7 @@ const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology:
 const categoryCollection = client.db("popup").collection("category");
 const productCollection = client.db("popup").collection("product");
 const bookingCollection = client.db("popup").collection('bookingProduct')
+const usersCollection = client.db("popup").collection('users')
 
 app.get('/', (req, res) => {
     res.send('POPUP Server is running');
@@ -60,6 +61,18 @@ async function run() {
         app.post('/booking', async (req, res) => {
             const bookingProduct = req.body;
             const result = await bookingCollection.insertOne(bookingProduct);
+            res.send(result);
+        })
+
+    } catch (error) {
+        res.send(error)
+    }
+    // Post for Booking Product
+
+    try {
+        app.post('/users', async (req, res) => {
+            const users = req.body;
+            const result = await usersCollection.insertOne(users);
             res.send(result);
         })
 
