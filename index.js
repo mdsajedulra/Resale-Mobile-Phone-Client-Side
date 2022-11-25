@@ -44,6 +44,29 @@ async function run() {
     }
 
 
+    // get product by brand name
+    try {
+        app.get('/myorder/', async (req, res) => {
+            const email = req.query.email;
+            // console.log(query)
+            const orders = await bookingCollection.find({ email: email }).toArray();
+            res.send(orders)
+        })
+    } catch (error) {
+        res.send(error)
+    }
+    // delete order by user
+    try {
+        app.delete('/myorder/delete/:id', async (req, res) => {
+            const id = req.params.id;
+            // console.log(query)
+            const orders = await bookingCollection.deleteOne({ _id: ObjectId(id) })
+            res.send(orders)
+        })
+    } catch (error) {
+        res.send(error)
+    }
+
 
     try {
         app.post('/addproduct', async (req, res) => {
