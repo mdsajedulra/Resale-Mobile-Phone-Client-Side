@@ -66,6 +66,16 @@ async function run() {
     } catch (error) {
         res.send(error)
     }
+    try {
+        app.delete('/myproducts/delete/:id', async (req, res) => {
+            const id = req.params.id;
+            // console.log(query)
+            const products = await productCollection.deleteOne({ _id: ObjectId(id) })
+            res.send(products)
+        })
+    } catch (error) {
+        res.send(error)
+    }
 
 
     try {
@@ -90,19 +100,29 @@ async function run() {
     } catch (error) {
         res.send(error)
     }
-    // Post for Booking Product
 
+    // Post for Booking Product
     try {
         app.post('/users', async (req, res) => {
             const users = req.body;
             const result = await usersCollection.insertOne(users);
             res.send(result);
         })
-
     } catch (error) {
         res.send(error)
     }
 
+    // my prodcut show
+    try {
+        app.get('/myproduct', async (req, res) => {
+            const email = req.query.email;
+            const query = { sellerEmail: email };
+            const result = await productCollection.find(query).toArray();
+            res.send(result);
+        })
+    } catch (error) {
+        res.send(error)
+    }
 
 }
 run().catch(error => res.send(error))
