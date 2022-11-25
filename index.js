@@ -14,6 +14,7 @@ const uri = "mongodb://0.0.0.0:27017";
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
 const categoryCollection = client.db("popup").collection("category");
 const productCollection = client.db("popup").collection("product");
+const bookingCollection = client.db("popup").collection('bookingProduct')
 
 app.get('/', (req, res) => {
     res.send('POPUP Server is running');
@@ -30,7 +31,7 @@ async function run() {
         res.send(error)
     }
 
-
+    // get product by brand name
     try {
         app.get('/products/:id', async (req, res) => {
             const query = { category: req.params.id }
@@ -41,6 +42,8 @@ async function run() {
         res.send(error)
     }
 
+
+
     try {
         app.post('/addproduct', async (req, res) => {
             const product = req.body;
@@ -49,6 +52,19 @@ async function run() {
         })
     } catch (error) {
         res.send(error);
+    }
+
+    // Post for Booking Product
+
+    try {
+        app.post('/booking', async (req, res) => {
+            const bookingProduct = req.body;
+            const result = await bookingCollection.insertOne(bookingProduct);
+            res.send(result);
+        })
+
+    } catch (error) {
+        res.send(error)
     }
 
 
