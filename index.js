@@ -2,8 +2,8 @@ const express = require('express');
 const cors = require('cors');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const { query } = require('express');
-
 const app = express()
+require('dotenv').config();
 //middle ware
 app.use(cors())
 app.use(express.json())
@@ -38,6 +38,17 @@ async function run() {
         app.get('/products/:id', async (req, res) => {
             const query = { category: req.params.id }
             const products = await productCollection.find(query).toArray();
+            const bookedProduct = await bookingCollection.find({}).toArray();
+            products.forEach(product => {
+                const booked = bookedProduct.filter(book => book.name.includes(product.name));
+                // const bookedOption = booked.map(book => book.name)
+                // const remainingProduct = bookedOption.filter(n => product.name.includes(n))
+                console.log(booked)
+            })
+
+
+
+
             res.send(products)
         })
     } catch (error) {
@@ -129,12 +140,55 @@ async function run() {
     try {
         app.post('/addproduct', async (req, res) => {
             const product = req.body;
+            const update = req.query.sold;
+            console.log(update)
             const result = await productCollection.insertOne(product);
             res.send(result)
         })
     } catch (error) {
         res.send(error);
     }
+
+
+    try {
+        app.patch('/addproduct/:id', async (req, res) => {
+            const id = req.params.id;
+            const result = await productCollection.updateOne({ _id: ObjectId(id) }, { $set: { sold: true } }, { upsert: true })
+            // const result = await productCollection.insertOne(product);
+            res.send(result)
+        })
+    } catch (error) {
+        res.send(error);
+    }
+
+
+    // Advertise api
+    try {
+        app.patch('/advertise/:id', async (req, res) => {
+            const id = req.params.id;
+            console.log(id)
+            const result = await productCollection.updateOne({ _id: ObjectId(id) }, { $set: { advertise: true } }, { upsert: true })
+            // const result = await productCollection.insertOne(product);
+            res.send(result)
+        })
+    } catch (error) {
+        res.send(error);
+    }
+
+    // get advertise product
+
+    try {
+        app.get('/advertise', async (req, res) => {
+            const result = await productCollection.find({ advertise: true }).toArray();
+            res.send(result)
+        })
+    } catch (error) {
+
+    }
+
+
+
+
 
     // Post for Booking Product
 
