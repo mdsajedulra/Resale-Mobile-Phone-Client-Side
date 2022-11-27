@@ -182,6 +182,7 @@ async function run() {
     try {
         app.patch('/addproduct/:id', async (req, res) => {
             const id = req.params.id;
+            console.log(id)
             const result = await productCollection.updateOne({ _id: ObjectId(id) }, { $set: { sold: true } }, { upsert: true })
             // const result = await productCollection.insertOne(product);
             res.send(result)
