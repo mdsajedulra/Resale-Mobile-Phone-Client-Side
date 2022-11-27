@@ -4,6 +4,7 @@ const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const { query } = require('express');
 const app = express()
 require('dotenv').config();
+var jwt = require('jsonwebtoken'); // jwt require
 //middle ware
 app.use(cors())
 app.use(express.json())
@@ -21,7 +22,21 @@ const usersCollection = client.db("popup").collection('users')
 app.get('/', (req, res) => {
     res.send('POPUP Server is running');
 })
+function verifyJWT(req, res, next) {
 
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+        return res.send(401).send('unauthorized access')
+    }
+    const token = authHeader.split(' ')[1]
+    jwt.verify(token, process.env.ACCESS_TOKEN, function (err, decoded) {
+        if (err) {
+            return res.status(403).send({ message: 'forbiden access' })
+        }
+        req.decoded = decoded;
+        next()
+    })
+}
 
 async function run() {
     try {
@@ -58,9 +73,13 @@ async function run() {
 
     // get product by brand name
     try {
-        app.get('/myorder/', async (req, res) => {
+        app.get('/myorder/', verifyJWT, async (req, res) => {
             const email = req.query.email;
-            // console.log(query)
+            const decodedEmail = req.decoded.email;
+            if (email !== decodedEmail) {
+                return res.status(403).send({ message: 'forbidden access' })
+            }
+            console.log('token', req.headers.authorization)
             const orders = await bookingCollection.find({ email: email }).toArray();
             res.send(orders)
         })
@@ -225,6 +244,39 @@ async function run() {
     } catch (error) {
         res.send(error)
     }
+
+
+    try {
+        app.get('/jwt', async (req, res) => {
+            const email = req.query.email;
+            const query = { email: email }
+            const user = await usersCollection.findOne(query);
+            if (user) {
+                const token = jwt.sign({ email }, process.env.ACCESS_TOKEN, { expiresIn: '1h' })
+                return res.send({ accessToken: token })
+            }
+            console.log(user)
+
+            res.status(403).send({ accessToken: 'acces token' })
+        })
+
+    } catch (error) {
+
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 }
 run().catch(error => res.send(error))
