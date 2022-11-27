@@ -177,8 +177,6 @@ async function run() {
     } catch (error) {
         res.send(error);
     }
-
-
     try {
         app.patch('/addproduct/:id', async (req, res) => {
             const id = req.params.id;
