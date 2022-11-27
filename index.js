@@ -108,6 +108,16 @@ async function run() {
     } catch (error) {
         res.send(error)
     }
+    try {
+        app.patch('/users/:email', async (req, res) => {
+            const email = req.params.email;
+            // console.log(email)
+            const users = await productCollection.updateOne({ sellerEmail: email }, { $set: { isVerify: true } }, { upsert: true });
+            res.send(users)
+        })
+    } catch (error) {
+        res.send(error)
+    }
 
 
     // All seller
