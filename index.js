@@ -4,6 +4,7 @@ const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const { query } = require('express');
 const app = express()
 require('dotenv').config();
+const stripe = require("stripe")(process.env.STRIPE_SECRET);
 var jwt = require('jsonwebtoken'); // jwt require
 //middle ware
 app.use(cors())
@@ -18,6 +19,8 @@ const categoryCollection = client.db("popup").collection("category");
 const productCollection = client.db("popup").collection("product");
 const bookingCollection = client.db("popup").collection('bookingProduct')
 const usersCollection = client.db("popup").collection('users')
+const paymentCollection = client.db("popup").collection('payments')
+const reportsCollection = client.db("popup").collection('reportedItem')
 
 app.get('/', (req, res) => {
     res.send('POPUP Server is running');
@@ -101,7 +104,7 @@ async function run() {
     try {
         app.get('/users', async (req, res) => {
             const email = req.query.email;
-            console.log(email)
+            // console.log(email)
             const users = await usersCollection.findOne({ email: email });
             res.send(users)
         })
@@ -125,6 +128,18 @@ async function run() {
         app.get('/allseller', async (req, res) => {
             const seller = await usersCollection.find({ "role": "seller" }).toArray();
             res.send(seller)
+        })
+    } catch (error) {
+        res.send(error)
+    }
+
+    // 
+    try {
+        app.get('/productinfo/:id', async (req, res) => {
+            const id = req.params.id;
+            console.log(id)
+            const product = await bookingCollection.findOne({ _id: ObjectId(id) });
+            res.send(product)
         })
     } catch (error) {
         res.send(error)
@@ -214,10 +229,6 @@ async function run() {
 
     }
 
-
-
-
-
     // Post for Booking Product
 
     try {
@@ -254,6 +265,26 @@ async function run() {
         res.send(error)
     }
 
+    try {
+        app.post('/create-payment-intent', async (req, res) => {
+            const booking = req.body;
+            const price = booking.resalePrice;
+            const amount = price * 100;
+            console.log(amount)
+            const paymentIntent = await stripe.paymentIntents.create({
+                currency: 'usd',
+                amount: amount,
+                "payment_method_types": [
+                    "card"
+                ]
+            })
+            res.send({
+                clientSecret: paymentIntent.client_secret,
+            })
+        })
+    } catch (error) {
+        res.send(error)
+    }
 
     try {
         app.get('/jwt', async (req, res) => {
@@ -270,12 +301,49 @@ async function run() {
         })
 
     } catch (error) {
+        res.send(error)
+    }
 
+    // store payment collection
+    try {
+        app.post('/payments', async (req, res) => {
+            const payment = req.body;
+            const result = await paymentCollection.insertOne(payment)
+            const id = payment.orderId;
+            const filter = { _id: ObjectId(id) };
+            const updatedDoc = {
+                $set: {
+                    paid: true,
+                    transactionid: payment.transactionId,
+                }
+            }
+            const updatedResult = await bookingCollection.updateOne(filter, updatedDoc,)
+            res.send(result)
+        })
+    } catch (error) {
+        res.send(error)
     }
 
 
+    try {
+        app.post('/reportItem', async (req, res) => {
+            const reportItem = req.body;
+            console.log(reportItem)
+            const result = await reportsCollection.insertOne(reportItem);
+            res.send(result);
+        })
+    } catch (error) {
+        res.send(error)
+    }
 
-
+    try {
+        app.get('/reportItem', async (req, res) => {
+            const result = await reportsCollection.find({}).toArray();
+            res.send(result);
+        })
+    } catch (error) {
+        res.send(error)
+    }
 
 
 
